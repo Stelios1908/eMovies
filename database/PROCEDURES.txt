@@ -1,0 +1,232 @@
+﻿/* 3.1 */
+drop procedure if exists rentals_time_window;
+DELIMITER $
+CREATE PROCEDURE rentals_time_window(IN tp CHAR(1),IN cnt INT,IN DT1 DATE,IN DT2 DATE )
+BEGIN 
+
+	IF(tp like "m") THEN
+
+		select title, film_id,count(*)
+		from film natural join film_rental as f natural join film_inventory
+		where f.film_rental_date between DT1 and DT2
+		group by film_id
+		order by count(*) desc
+		limit cnt; 
+
+	ELSEIF(tp like "s") THEN
+
+		select distinct s.title, s.series_id,count(*)
+		from series as s inner join season as se on s.series_id = se.series_id
+		inner join episode as ep on se.season_id=ep.season_id and se.series_id=ep.series_id
+		inner join episode_inventory as epi on ep.episode_id = epi.episode_id
+		inner join episode_rental as epr on epi.episode_inventory_id = epr.episode_inventory_id
+		where epr.episode_rental_date between DT1 and DT2
+		group by s.series_id
+		order by count(*) desc
+		limit cnt;
+
+	ELSE 
+		SELECT "wrong first parameter" as msg;
+	END IF;
+
+END$
+DELIMITER ;
+
+
+
+/* 3.2 */
+drop procedure if exists get_rental_by_date;
+DELIMITER $
+CREATE PROCEDURE get_rental_by_date(IN em VARCHAR(50), IN dt DATE,OUT count INT)
+BEGIN
+	declare t varchar(50);
+	declare u smallint;
+	declare f int;
+	declare e int;
+
+
+	select type into t from customer where email like em;
+	select customer_id into u from customer where email like em;
+
+	IF(t like 'film') THEN
+		select count(*) as number_of_movies_rented_this_day 
+		from film_rental 
+		where film_rental_date between  CONCAT(dt," 00:00:00") and CONCAT(dt," 23:59:59") and customer_id = u;
+
+
+	ELSEIF(t like 'series') THEN
+		select count(*) as number_episodes_rented_this_day 
+		from episode_rental  
+		where episode_rental_date between  CONCAT(dt," 00:00:00") and CONCAT(dt," 23:59:59") and customer_id = u;
+
+	ELSEIF(t like 'both') THEN
+		select count(*) into f 
+		from film_rental 
+		where film_rental_date between  CONCAT(dt," 00:00:00") and CONCAT(dt," 23:59:59") and customer_id = u;
+
+		select count(*) into e 
+		from episode_rental  
+		where episode_rental_date between  CONCAT(dt," 00:00:00") and CONCAT(dt," 23:59:59") and customer_id = u;
+
+		SET count = f+e;
+		select f+e as number_of_rentals_this_day;
+	ELSE SELECT "not valid email" as msg;
+
+	END IF ;
+
+END$
+DELIMITER ;
+
+
+
+/* 3.3 */
+drop procedure if exists monthly_payment;
+DELIMITER $
+CREATE PROCEDURE monthly_payment()
+BEGIN
+	DECLARE month_counter INT;
+	DECLARE smmhna FLOAT ;
+	DECLARE smmhna2 FLOAT  ;
+	set month_counter = 1;
+
+	WHILE (month_counter<=12) DO
+
+		select sum(film_amount) INTO smmhna
+		from film_payment
+		where MONTH(film_payment_date)=month_counter;
+	
+		IF (smmhna IS NULL) THEN 
+			SET smmhna = 0;
+		END IF;
+
+		select sum(episode_amount) INTO smmhna2
+		from episode_payment
+		where MONTH(episode_payment_date)=month_counter;
+	
+		IF (smmhna2 IS NULL) THEN 
+			SET smmhna2 = 0;
+		END IF;
+
+		select month_counter as mhnas,smmhna as film_payment_total,smmhna2 as episode_payment_total;
+
+		SET month_counter = month_counter+1;
+	END WHILE;
+
+END$
+DELIMITER ;
+
+
+
+/* 3.4a */
+drop procedure IF EXISTS get_names_in_between;
+DELIMITER $
+CREATE PROCEDURE get_names_in_between(IN lname1 VARCHAR(10),IN lname2 VARCHAR(10))
+BEGIN
+	select first_name,last_name
+	from actor
+	where last_name between lname1 and  lname2
+	order by last_name;/*αυτό είναι καθαρά δική μας επιλογή.*/
+	select found_rows() as number_of_actors;
+END$
+DELIMITER ;
+
+
+
+/* 3.4b */
+drop procedure IF EXISTS get_actors_from_name;
+DELIMITER $
+CREATE PROCEDURE get_actors_from_name(IN lname1 VARCHAR(100))
+BEGIN
+	declare plithos INT;
+	select first_name,last_name
+	from actor
+	where last_name like lname1;
+
+	SELECT FOUND_ROWS() into plithos;
+	
+	IF(plithos>0) THEN 
+		select plithos as number_of_actors_with_the_same_name;
+	ELSEIF(plithos = 0) THEN
+		select "There is no actor with that last name" as msg;
+	END IF;
+END$
+DELIMITER ;
+
+
+
+/* custom procedure
+Δέχεται δύο ορίσματα εισόδου, το cust_id και τον τύπο πελάτη και μία παράμετρο εξόδου με την τιμή ενοικίασης του συγκεκριμένου πελάτη. 
+Ανάλογα με το είδος του πελάτη (film/series/both) και το είδος της ενοικίασης (film/episode), επιστρέφει την αντίστοιχη τιμή ενοικίασης (film_payment/episode_payment). */
+
+drop procedure IF EXISTS get_amount;
+DELIMITER $
+CREATE  PROCEDURE get_amount (IN cust_id smallint,OUT amount decimal(5,2),IN sel_type BIT(1))
+BEGIN
+	declare t enum("film","series","both");
+	/*sel_type = 0 καλείται από film ενώ sel_type = 1 καλείται από episode.*/
+	select type into t 
+	from customer
+	where customer_id = cust_id;
+
+	IF(t like "film" and sel_type = 0) THEN
+		select film_film_value into amount from price_list;
+
+	ELSEIF(t like "series" and sel_type = 1) THEN
+		select episode_series_value into amount from price_list;
+
+	ELSEIF(t like "both" and sel_type = 0) THEN
+		select film_both_value into amount from price_list;
+
+	ELSEIF(t like "both" and sel_type = 1) THEN
+		select episode_both_value into amount from price_list;
+
+END IF;
+
+END$
+DELIMITER ;
+
+
+
+/* custom procedure
+Δέχεται δύο ορίσματα εισόδου, ένα email και έναν ακέραιο που υποδηλώνει σε ποιον πίνακα χρηστών πρόκειται να ψάξουμε. Επιστρέφει 1 στην παράμετρο εξόδου  αν ο χρήστης με το συγκεκριμένο email ανήκει σε κάποια από τις 3 κατηγορίες χρηστών και 0 διαφορετικά.  */
+
+drop procedure IF EXISTS user_exists;
+DELIMITER $
+CREATE  PROCEDURE user_exists(IN email_user varchar(150),IN user_table INT,OUT user_type bit(1))
+BEGIN
+	DECLARE TMP VARCHAR(150);
+	set user_type = 0;
+	IF(user_table = 1) THEN
+
+		select email_user into tmp
+		from customer
+		where email like email_user;
+		
+		IF(tmp IS NOT NULL) THEN
+			set user_type = 1;
+		END IF;
+
+	ELSEIF(user_table = 2) THEN
+
+		select email_user into tmp
+		from employee
+		where email like email_user;
+		
+		IF(tmp IS NOT NULL) THEN
+			set user_type = 1;
+		END IF;
+
+	ELSEIF(user_table = 3) THEN
+
+		select email_user into tmp
+		from administrator
+		where email like email_user;
+		
+		IF(tmp IS NOT NULL) THEN
+			set user_type = 1;
+		END IF;
+
+	END IF;
+
+END$
+DELIMITER ;

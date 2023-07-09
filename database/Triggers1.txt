@@ -1,0 +1,952 @@
+DROP TRIGGER IF EXISTS ins_to_episod_payment;
+DELIMITER $
+CREATE TRIGGER  ins_to_episod_payment
+AFTER INSERT ON episode_payment
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','episode_payment');
+   END$
+DELIMITER ;   
+
+
+
+DROP TRIGGER IF EXISTS del_to_episod_payment;
+DELIMITER $
+CREATE TRIGGER  del_to_episod_payment
+AFTER DELETE ON episode_payment
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','episode_payment');
+   END$
+DELIMITER ;  
+
+
+DROP TRIGGER IF EXISTS upd_to_episod_payment;
+DELIMITER $
+CREATE TRIGGER  upd_to_episod_payment
+AFTER UPDATE ON episode_payment
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','episode_payment');
+   END$
+DELIMITER ;
+
+
+
+
+drop trigger if exists ins_to_episod_rental;
+DELIMITER $
+CREATE TRIGGER  ins_to_episod_rental
+AFTER INSERT ON episode_rental
+
+FOR EACH ROW
+   BEGIN
+       DECLARE amnt DECIMAL(5,2);
+       DECLARE tmp varchar(100);
+       call get_amount(NEW.customer_id,amnt,1);
+       insert into episode_payment values
+       (DEFAULT,NEW.customer_id,NEW.episode_rental_id,amnt,NEW.episode_rental_date);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','episode_rental');
+   END$
+DELIMITER ;  
+
+
+drop trigger if exists del_to_episod_rental;
+DELIMITER $
+CREATE TRIGGER  del_to_episod_rental
+BEFORE DELETE ON episode_rental
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       delete from episode_payment where episode_rental_id = old.episode_rental_id;
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','episode_rental');
+   END$
+DELIMITER ;  
+
+drop trigger if exists upd_to_episod_rental;
+DELIMITER $
+CREATE TRIGGER  upd_to_episod_rental
+AFTER UPDATE ON episode_rental
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','episode_rental');
+   END$
+DELIMITER ; 
+
+
+
+drop trigger if exists ins_to_episod_inventory;
+DELIMITER $
+CREATE TRIGGER  ins_to_episod_inventory
+AFTER INSERT ON episode_inventory
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','episode_inventory');
+   END$
+DELIMITER ;  
+
+
+drop trigger if exists del_to_episod_inventory;
+DELIMITER $
+CREATE TRIGGER  del_to_episod_inventory
+AFTER DELETE ON episode_inventory
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','episode_inventory');
+   END$
+DELIMITER ; 
+
+drop trigger if exists upd_to_episod_inventory;
+DELIMITER $
+CREATE TRIGGER  upd_to_episod_inventory
+AFTER UPDATE ON episode_inventory
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','episode_inventory');
+   END$
+DELIMITER ; 
+
+
+drop trigger if exists ins_to_film_payment;
+DELIMITER $
+CREATE TRIGGER  ins_to_film_payment
+AFTER INSERT ON film_payment
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','film_payment');
+   END$
+DELIMITER ; 
+
+/*done*/
+
+drop trigger if exists del_to_film_payment;
+DELIMITER $
+CREATE TRIGGER  del_to_film_payment
+AFTER DELETE ON film_payment
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','film_payment');
+   END$
+DELIMITER ; 
+
+
+drop trigger if exists upd_to_film_payment;
+DELIMITER $
+CREATE TRIGGER  upd_to_film_payment
+AFTER UPDATE ON film_payment
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','film_payment');
+   END$
+DELIMITER ; 
+
+
+
+
+drop trigger if exists ins_to_film_rental;
+DELIMITER $
+CREATE TRIGGER  ins_to_film_rental
+AFTER INSERT ON film_rental
+
+FOR EACH ROW
+   BEGIN
+       DECLARE amnt DECIMAL(5,2);
+       DECLARE tmp varchar(100);
+       call get_amount(NEW.customer_id,amnt,0);
+       insert into film_payment values
+       (DEFAULT,NEW.customer_id,NEW.film_rental_id,amnt,NEW.film_rental_date);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','film_rental');
+   END$
+DELIMITER ; 
+
+/*done*/
+
+drop trigger if exists del_to_film_rental;
+DELIMITER $
+CREATE TRIGGER  del_to_film_rental
+AFTER DELETE ON film_rental
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       delete from film_payment where film_rental_id = old.film_rental_id;
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','film_rental');
+   END$
+DELIMITER ; 
+
+/*done*/
+
+drop trigger if exists upd_to_film_rental;
+DELIMITER $
+CREATE TRIGGER  upd_to_film_rental
+AFTER UPDATE ON film_rental
+
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','film_rental');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists ins_to_film_inventory;
+DELIMITER $
+CREATE TRIGGER  ins_to_film_inventory
+AFTER INSERT ON film_inventory
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','film_inventory');
+   END$
+DELIMITER ; 
+
+
+drop trigger if exists del_to_film_inventory;
+DELIMITER $
+CREATE TRIGGER  del_to_film_inventory
+AFTER DELETE ON film_inventory
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','film_inventory');
+   END$
+DELIMITER ; 
+
+/*done*/
+drop trigger if exists upd_to_film_inventory;
+DELIMITER $
+CREATE TRIGGER  upd_to_film_inventory
+AFTER UPDATE ON film_inventory
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','film_inventory');
+   END$
+DELIMITER ; 
+
+/*TELOS GIA SIMERA*/
+
+/*done*/
+/* -------TRIGGER CUSTOMER-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_customer;
+DELIMITER $
+CREATE TRIGGER  ins_to_customer
+AFTER INSERT ON customer
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','customer');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_customer;
+DELIMITER $
+CREATE TRIGGER  del_to_customer
+AFTER DELETE ON customer
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','customer');
+   END$
+DELIMITER ;  
+
+
+/*done*/
+/* -------TRIGGER EMPLOYEES-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_employee;
+DELIMITER $
+CREATE TRIGGER  ins_to_employee
+AFTER INSERT ON employee
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','employee');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_employee;
+DELIMITER $
+CREATE TRIGGER  del_to_employee
+AFTER DELETE ON employee
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','employee');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists upd_to_employee;
+DELIMITER $
+CREATE TRIGGER  upd_to_employee
+AFTER UPDATE ON employee
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','employee');
+   END$
+DELIMITER ; 
+
+
+/*done*/
+/* -------TRIGGER ADMINISTRATORS-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_administrator;
+DELIMITER $
+CREATE TRIGGER  ins_to_administrator
+AFTER INSERT ON administrator
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','administrator');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_administrator;
+DELIMITER $
+CREATE TRIGGER  del_to_administrator
+AFTER DELETE ON administrator
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','administrator');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists upd_to_administrator;
+DELIMITER $
+CREATE TRIGGER  upd_to_administrator
+AFTER UPDATE ON administrator
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','administrator');
+   END$
+DELIMITER ;
+
+
+
+/*done*/
+/* -------TRIGGER SERIES_SUBTITLES-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_series_subtitles;
+DELIMITER $
+CREATE TRIGGER  ins_to_series_subtitles
+AFTER INSERT ON series_subtitles
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','series_subtitles');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_series_subtitles;
+DELIMITER $
+CREATE TRIGGER  del_to_series_subtitles
+AFTER DELETE ON series_subtitles
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','series_subtitles');
+   END$
+DELIMITER ; 
+
+
+/*done*/
+drop trigger if exists upd_to_series_subtitles;
+DELIMITER $
+CREATE TRIGGER  upd_to_series_subtitles
+AFTER UPDATE ON series_subtitles
+FOR EACH ROW
+   BEGIN
+
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','series_subtitles');
+   END$
+DELIMITER ;
+
+
+/*done*/
+/* -------TRIGGER LANGUAGE-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_language;
+DELIMITER $
+CREATE TRIGGER  ins_to_language
+AFTER INSERT ON language
+FOR EACH ROW
+   BEGIN
+
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','language');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_language;
+DELIMITER $
+CREATE TRIGGER  del_to_language
+AFTER DELETE ON language
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','language');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists upd_to_language;
+DELIMITER $
+CREATE TRIGGER  upd_to_language
+AFTER UPDATE ON language
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','language');
+   END$
+DELIMITER ;
+
+
+/*done*/
+/* -------TRIGGER CATEGORY-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_category;
+DELIMITER $
+CREATE TRIGGER  ins_to_category
+AFTER INSERT ON category
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','category');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_category;
+DELIMITER $
+CREATE TRIGGER  del_to_category
+AFTER DELETE ON category
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','category');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists upd_to_category;
+DELIMITER $
+CREATE TRIGGER  upd_to_category
+AFTER UPDATE ON category
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','category');
+   END$
+DELIMITER ;
+
+
+/*done*/
+/* -------TRIGGER ACTOR-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_actor;
+DELIMITER $
+CREATE TRIGGER  ins_to_actor
+AFTER INSERT ON actor
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','actor');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_actor;
+DELIMITER $
+CREATE TRIGGER  del_to_actor
+AFTER DELETE ON actor
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','actor');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists upd_to_actor;
+DELIMITER $
+CREATE TRIGGER  upd_to_actor
+AFTER UPDATE ON actor
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','actor');
+   END$
+DELIMITER ;
+
+
+
+
+/*done*/
+/* -------TRIGGER FILM-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_film;
+DELIMITER $
+CREATE TRIGGER  ins_to_film
+AFTER INSERT ON film
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','film');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_film;
+DELIMITER $
+CREATE TRIGGER  del_to_film
+AFTER DELETE ON film
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','film');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists upd_to_film;
+DELIMITER $
+CREATE TRIGGER  upd_to_film
+AFTER UPDATE ON film
+for each row
+  BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','film');
+   END$
+DELIMITER ;
+
+
+
+/*done*/
+/* -------TRIGGER SERIES-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_series;
+DELIMITER $
+CREATE TRIGGER  ins_to_series
+AFTER INSERT ON series
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','series');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_series;
+DELIMITER $
+CREATE TRIGGER  del_to_series
+AFTER DELETE ON series
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','series');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists upd_to_series;
+DELIMITER $
+CREATE TRIGGER  upd_to_series
+AFTER UPDATE ON series
+for each row
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','series');
+   END$
+DELIMITER ;
+
+
+
+/*done*/
+/* -------TRIGGER SEASON-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_season;
+DELIMITER $
+CREATE TRIGGER  ins_to_season
+AFTER INSERT ON season
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','season');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_season;
+DELIMITER $
+CREATE TRIGGER  del_to_season
+AFTER DELETE ON season
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','season');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists upd_to_season;
+DELIMITER $
+CREATE TRIGGER  upd_to_season
+AFTER UPDATE ON season
+for each row
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','season');
+   END$
+DELIMITER ;
+
+
+/*done*/
+/* -------TRIGGER EPISODE-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_episode;
+DELIMITER $
+CREATE TRIGGER  ins_to_episode
+AFTER INSERT ON episode
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','episode');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_episode;
+DELIMITER $
+CREATE TRIGGER  del_to_episode
+AFTER DELETE ON episode
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','episode');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists upd_to_episode;
+DELIMITER $
+CREATE TRIGGER  upd_to_episode
+AFTER UPDATE ON episode
+for each row
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','episode');
+   END$
+DELIMITER ;
+
+
+
+
+/*done*/
+/* -------TRIGGER FILM_ACTOR-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_film_actor;
+DELIMITER $
+CREATE TRIGGER  ins_to_film_actor
+AFTER INSERT ON film_actor
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','film_actor');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_film_actor;
+DELIMITER $
+CREATE TRIGGER  del_to_film_actor
+AFTER DELETE ON film_actor
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','film_actor');
+   END$
+DELIMITER ; 
+
+
+/*done*/
+drop trigger if exists upd_to_film_actor;
+DELIMITER $
+CREATE TRIGGER  upd_to_film_actor
+AFTER UPDATE ON film_actor
+for each row
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','film_actor');
+   END$
+DELIMITER ;
+
+
+
+
+/*done*/
+/* -------TRIGGER SERIES_ACTOR-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_series_actor;
+DELIMITER $
+CREATE TRIGGER  ins_to_series_actor
+AFTER INSERT ON series_actor
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','series_actor');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_series_actor;
+DELIMITER $
+CREATE TRIGGER  del_to_series_actor
+AFTER DELETE ON series_actor
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','series_actor');
+   END$
+DELIMITER ; 
+
+
+
+/*done*/
+drop trigger if exists upd_to_series_actor;
+DELIMITER $
+CREATE TRIGGER  upd_to_series_actor
+AFTER UPDATE ON series_actor
+for each row
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','series_actor');
+   END$
+DELIMITER ;
+
+
+
+/*done*/
+/* -------TRIGGER FILM_CATEGORY-------------*/
+/*INSERT*/
+DROP TRIGGER IF EXISTS ins_to_film_category;
+DELIMITER $
+CREATE TRIGGER  ins_to_film_category
+AFTER INSERT ON film_category
+FOR EACH ROW
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','INSERT','film_category');
+   END$
+DELIMITER ;   
+
+
+/*done*/
+/*DELETE*/
+DROP TRIGGER IF EXISTS del_to_film_category;
+DELIMITER $
+CREATE TRIGGER  del_to_film_category
+AFTER DELETE ON film_category
+FOR EACH ROW                                                           
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','film_category');
+   END$
+DELIMITER ; 
+
+
+/*done*/
+drop trigger if exists upd_to_film_category;
+DELIMITER $
+CREATE TRIGGER  upd_to_film_category
+AFTER UPDATE ON film_category
+for each row
+   BEGIN
+       DECLARE tmp varchar(100);
+       select email into tmp from cuser;
+       insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','film_category');
+   END$
+DELIMITER ;

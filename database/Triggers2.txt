@@ -1,0 +1,110 @@
+drop trigger if exists film_discount;
+DELIMITER $
+CREATE TRIGGER  film_discount
+AFTER INSERT ON film_rental
+
+
+FOR EACH ROW
+   BEGIN
+
+DECLARE typoseggrafhs enum("film","both");
+DECLARE count INT;
+DECLARE tmp INT;
+DECLARE amnt DECIMAL(5,2);
+DECLARE em VARCHAR(45);
+
+call get_amount(NEW.customer_id,amnt,0);
+
+select email into em
+from customer
+where customer_id = NEW.customer_id;
+
+select type into typoseggrafhs from customer where email like em;
+
+
+IF(typoseggrafhs like 'film') then
+select count(*) into count 
+from film_rental 
+where film_rental_date between  CONCAT(current_date()," 00:00:00") and CONCAT(current_date()," 23:59:59") and customer_id = NEW.customer_id;
+
+ELSEIF(typoseggrafhs like 'both') then
+select count(*) into count
+from film_rental 
+where film_rental_date between  CONCAT(current_date()," 00:00:00") and CONCAT(current_date()," 23:59:59") and customer_id = NEW.customer_id;
+
+select count(*) into tmp
+from episode_rental  
+where episode_rental_date between  CONCAT(current_date()," 00:00:00") and CONCAT(current_date()," 23:59:59") and customer_id = NEW.customer_id;
+
+set count = count + tmp;
+
+END IF;
+
+IF(MOD(count,3)=0) THEN
+
+UPDATE film_payment as fp
+SET film_amount = amnt / 2
+WHERE fp.customer_id = NEW.customer_id and 
+fp.film_rental_id = NEW.film_rental_id;
+    
+END IF;
+      
+    END$
+DELIMITER ; 
+
+
+/* episode_discount trigger */
+
+drop trigger if exists episode_discount;
+DELIMITER $
+CREATE TRIGGER  episode_discount
+AFTER INSERT ON episode_rental
+
+
+FOR EACH ROW
+   BEGIN
+
+DECLARE typoseggrafhs enum("series","both");
+DECLARE count INT;
+DECLARE tmp INT;
+DECLARE amnt DECIMAL(5,2);
+DECLARE em VARCHAR(45);
+
+call get_amount(NEW.customer_id,amnt,1);
+
+select email into em
+from customer
+where customer_id = NEW.customer_id;
+
+select type into typoseggrafhs from customer where email like em;
+
+
+IF(typoseggrafhs like 'series') then
+select count(*) into count 
+from episode_rental 
+where episode_rental_date between  CONCAT(current_date()," 00:00:00") and CONCAT(current_date()," 23:59:59") and customer_id = NEW.customer_id;
+
+ELSEIF(typoseggrafhs like 'both') then
+select count(*) into count
+from film_rental 
+where film_rental_date between  CONCAT(current_date()," 00:00:00") and CONCAT(current_date()," 23:59:59") and customer_id = NEW.customer_id;
+
+select count(*) into tmp
+from episode_rental  
+where episode_rental_date between  CONCAT(current_date()," 00:00:00") and CONCAT(current_date()," 23:59:59") and customer_id = NEW.customer_id;
+
+set count = count +tmp;
+
+END IF;
+
+IF(MOD(count,3)=0) THEN
+
+UPDATE episode_payment as ep
+SET episode_amount = amnt / 2
+WHERE ep.customer_id = NEW.customer_id and 
+ep.episode_rental_id = NEW.episode_rental_id;
+    
+END IF;
+      
+    END$
+DELIMITER ; 

@@ -1,0 +1,138 @@
+drop trigger if exists customer_rule_application;
+DELIMITER $
+CREATE TRIGGER  customer_rule_application
+BEFORE UPDATE ON customer
+
+
+FOR EACH ROW
+   BEGIN
+    DECLARE xrhsths varchar(100);
+    DECLARE THESH INT;
+    DECLARE YPARXEI BIT(1);
+    DECLARE tmp varchar(100);
+    set YPARXEI = 0;
+
+    /*we get the email of the current user*/
+    /*the first one is deprecated*/
+    select CURRENT_USER() INTO xrhsths;
+    select POSITION("@" IN xrhsths) into THESH;
+    select SUBSTR(xrhsths,1,THESH-1) into xrhsths;
+    
+    /*edo to bazoume karfota gia test*/
+    set xrhsths = "stelarg@gmail.com";
+    call user_exists(xrhsths,1,YPARXEI);
+    
+    
+    select email into tmp from cuser; 
+
+
+    if(YPARXEI = 1) then
+        if( OLD.email!=New.email or OLD.active!=NEW.active or  OLD.create_date!=NEW.create_date  )then
+        insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'FALSE','UPDATE','customer');
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid action. You tried to change the email or the creation date or the active status.Abort...';
+        else 
+         insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','customer');
+        end if;
+    ELSE
+	insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','UPDATE','customer');
+	END IF;
+   END$
+DELIMITER ; 
+
+
+/*custom triggers*/
+
+drop trigger if exists delcustuseraddr;
+delimiter $
+CREATE TRIGGER delcustuseraddr
+AFTER DELETE ON customer
+
+FOR EACH ROW
+BEGIN
+
+DECLARE tmp varchar(100);
+select email into tmp from cuser; 
+
+DELETE FROM user WHERE u_id=old.customer_id;
+DELETE FROM address where address_id=old.address_id;
+insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','CUSTOMER');
+insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','USER');
+
+END$
+delimiter ;
+
+
+drop trigger if exists delempluseraddr;
+delimiter $
+CREATE TRIGGER delempluseraddr
+AFTER DELETE ON employee
+
+FOR EACH ROW
+BEGIN
+
+DECLARE tmp varchar(100);
+select email into tmp from cuser; 
+
+if((select  first_name from employee natural join administrator ) is not null)then
+DELETE FROM user WHERE u_id=old.employee_id;
+DELETE FROM address where address_id=old.address_id;
+insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','EMPLOYEE');
+insert into Log values
+       (tmp,CURRENT_TIMESTAMP(),'TRUE','DELETE','USER');
+end if;
+
+
+
+END$
+delimiter ;
+
+
+
+
+/* pio aplo trigger pou nomizw ayto zhtaei sth fash tou project pou to leei. thewrhtika sto application to trigger auto den tha xrhsimopoihthei pote giati exoume kleidwmena ta pedia email kai password otan paei na kanei allages o customer alla epeidh to zhtaei ofeiloume na to kanoume*/
+drop trigger if exists check_credentials1;
+delimiter $
+create trigger check_credentials1 before update on user for each row 
+begin
+DECLARE tmp varchar(100);
+select email into tmp 
+from cuser
+where email like '%@sakilaadmin.org';
+if(tmp is Null) then
+if(new.email != old.email) then
+set new.email = old.email;
+end if;
+if(new.password != old.password) then 
+set new.password = old.password;
+end if;
+end if;
+
+end$
+delimiter ;
+
+drop trigger if exists check_credentials2;
+delimiter $
+create trigger check_credentials2 before update on user for each row 
+begin
+
+DECLARE tmp varchar(100);
+select email into tmp 
+from cuser
+where email like '%@sakilaadmin.org';
+if(tmp is Null) then
+if(new.email != old.email) then
+signal sqlstate value '45000' set message_text ='You can not change your email!';
+end if;
+if(new.password != old.password) then 
+signal sqlstate value '45000' set message_text ='You can not change your password!';
+end if;
+end if;
+
+end$
+delimiter ;
